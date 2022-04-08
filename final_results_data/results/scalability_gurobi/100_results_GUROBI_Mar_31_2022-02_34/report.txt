@@ -1,0 +1,7 @@
+Report for Mar_31_2022-02_34
+inpath: /home/jana/Documents/BIONETs/Code/tree_match_approx_validator/all_other_data/scalability_trees/tree_blocks_gml/100
+outpath: /home/jana/Documents/BIONETs/Code/tree_match_approx_validator/final_results_data/results/scalability_gurobi/100_results_GUROBI_Mar_31_2022-02_34
+max_n: 100
+algorithm: GUROBI
+time_limit: 600
+entire duration: 6003.670081377029

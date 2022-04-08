@@ -1,0 +1,6 @@
+Report for Mar_29_2022-11_07
+inpath: /home/jana/Documents/BIONETs/Code/tree_match_approx_validator/all_other_data/scalability_trees/tree_blocks_gml/100
+outpath: /home/jana/Documents/BIONETs/Code/tree_match_approx_validator/final_results_data/results/scalability_approx/100_results_4-APPROX_Mar_29_2022-11_07
+max_n: 100
+algorithm: 4-APPROX
+entire duration: 6.948148965835571
