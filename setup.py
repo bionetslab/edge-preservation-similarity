@@ -6,4 +6,4 @@ setup(name='edge_preservation_similarity',
     author='Jana Kiederle',
     author_email='jana.kiederle@fau.de',
     packages=find_packages(),
-    install_requires=['os', 'numpy', 'pandas', 'time', 'datetime', 'pandas', 'networkx', 'gurobipy', 'sklearn', 'matplotlib', 'itertools', 'subprocess'])
+    install_requires=['numpy', 'time', 'networkx', 'gurobipy'])

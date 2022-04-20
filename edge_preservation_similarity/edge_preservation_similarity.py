@@ -4,7 +4,6 @@ Created on Apr 2022
 @authors: jkiederle
 """
 
-import numpy as np
 import time
 from utils import *
 

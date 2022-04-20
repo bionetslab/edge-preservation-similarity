@@ -7,7 +7,6 @@ Created on Wed Jul 14 18:20:28 2021, edited Apr 2022
 """
 
 import gurobipy as gu
-import os
 import networkx as nx
 import numpy as np
 
