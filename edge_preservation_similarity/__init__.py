@@ -1,1 +1,1 @@
-from .edge_preservation_similarity_main import *
+from edge_preservation_similarity import *
