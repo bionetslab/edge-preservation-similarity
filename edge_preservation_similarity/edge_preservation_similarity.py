@@ -6,6 +6,13 @@ Created on Apr 2022
 
 import time
 from utils import *
+import networkx as nx
+
+import argparse
+
+
+
+
 
 
 
@@ -17,6 +24,8 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
                                             'EDGE-PRESERVATION-SIM-EXACT' for exact measure
                 G1:                 first tree as networkx graph object
                 G2:                 second tree as networkx graph object
+                
+                optional:
                 time_limit:         time limit in seconds, note: only implemented for 'EDGE-PRESERVATION-SIM-EXACT' as it is NP-hard
                 normalize:          flag, if true results are normalized by division by max(#edges in trees G1 or G2)
 
@@ -25,6 +34,13 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
     E=Evaluator()
 
     print("Beginning computation of edge perservation similarity...")
+
+    print("exact or approximated algorithm: " + algorithm)
+
+    if time_limit > 0:
+        print("time limit: " + str(time_limit))
+
+    print("normalize similarity: " + str(normalize))
 
     tic=time.time()
 
@@ -40,9 +56,10 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
         similarity = E.evaluate_sol(G1,G2,ALG._sol)
 
     tac=time.time()
+    duration = tac-tic
 
     print("edge preservation similarity: " + str(similarity) + "\n")
-    print("computation done in: " + str(tac) + "s\n")
+    print("computation done in: " + str(duration) + "s\n")
 
     if timeflag:
         print("Time limit of " + str(time_limit) + "s exceeded.")
@@ -50,5 +67,56 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
             
     if normalize:
         similarity = normalize_similarity(similarity, G1, G2)
+    
+    print("Computation done!")
 
     return similarity 
+
+
+
+ALGORITHMS = {
+    "approx": "EDGE-PRESERVATION-SIM-APPROX",
+    "exact": "EDGE-PRESERVATION-SIM-EXACT"
+}
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="CLI for computing the edge preservation similarity of two trees")
+    parser.add_argument(
+        "algorithm",
+        type=str,
+        choices=ALGORITHMS.keys(),
+        help="Version of algorithm"
+    )
+    parser.add_argument(
+        "pathG1",
+        type=str,
+        help="Path to tree1"
+    )
+    parser.add_argument(
+        "pathG2",
+        type=str,
+        help="Path to tree2"
+    )
+    parser.add_argument(
+        "--time_limit",
+        default=0,
+        dest="limit",
+        type=int,
+        help="Set time limit in seconds for exact algorithm"
+    )
+    parser.add_argument(
+        "--normalize",
+        action="store_true",
+        help="Normalize similarity by dividing by max nr. of edges in tree1 and tree2"
+    )
+    parsed_args = parser.parse_args()
+    path_G1 = parsed_args.pathG1
+    path_G2 = parsed_args.pathG2
+
+    name_of_algorithm = ALGORITHMS[parsed_args.algorithm]
+
+    G1 = nx.read_gml(path_G1, label="id")
+    G2 = nx.read_gml(path_G2, label="id")
+ 
+    sim_value= compute_similarity(name_of_algorithm, G1, G2, parsed_args.limit, parsed_args.normalize)
+    
