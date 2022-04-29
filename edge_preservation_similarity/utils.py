@@ -289,12 +289,22 @@ class Approx_alg:
             for i,match in enumerate(sol):
                 sol[i]=sorted(match)
             Sols.append(sol)
-        self._sols=Sols       
+        self._sols=Sols
+
+def add_depth(G):
+    '''function needed for approximation algorithm as depth of tree is crucial for creation if LM-Graph
+        input:  G: tree in networkx format
+        output: adjusted G'''
+    for node in G.nodes:
+        SP=nx.shortest_path_length(G,0)
+        G.nodes[node]['depth']=SP[node]
+    return G
 
 def normalize_similarity(value, G1, G2):
     '''normalize similarity value based on the maximum number of edges of the trees G1 and G2
         input:  value: similarity value
-                G1, G2: trees of data type networkx graph'''
+                G1, G2: trees of data type networkx graph
+        output: normalized similarity value'''
     edge_count_G1 = G1.number_of_edges()
     edge_count_G2 = G2.number_of_edges()
 

@@ -33,8 +33,10 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
 
     E=Evaluator()
 
-    print("Beginning computation of edge perservation similarity...")
+    G1 = add_depth(G1)
+    G2 = add_depth(G2)
 
+    print("Beginning computation of edge perservation similarity...")
     print("exact or approximated algorithm: " + algorithm)
 
     if time_limit > 0:
@@ -74,6 +76,12 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
 
 
 
+''' This part is for the CLI only, please refer to the READ ME on git for explanation of usage
+    short version:  type in cmd:
+                    python edge_preservation_similarity.py "string of path of tree1" "string of path of tree 2" 
+                    optional:   --time_limit=   your custom timelimit in seconds, data type: int
+                                --normalize     flag if you need a normalization'''
+
 ALGORITHMS = {
     "approx": "EDGE-PRESERVATION-SIM-APPROX",
     "exact": "EDGE-PRESERVATION-SIM-EXACT"
@@ -81,34 +89,11 @@ ALGORITHMS = {
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CLI for computing the edge preservation similarity of two trees")
-    parser.add_argument(
-        "algorithm",
-        type=str,
-        choices=ALGORITHMS.keys(),
-        help="Version of algorithm"
-    )
-    parser.add_argument(
-        "pathG1",
-        type=str,
-        help="Path to tree1"
-    )
-    parser.add_argument(
-        "pathG2",
-        type=str,
-        help="Path to tree2"
-    )
-    parser.add_argument(
-        "--time_limit",
-        default=0,
-        dest="limit",
-        type=int,
-        help="Set time limit in seconds for exact algorithm"
-    )
-    parser.add_argument(
-        "--normalize",
-        action="store_true",
-        help="Normalize similarity by dividing by max nr. of edges in tree1 and tree2"
-    )
+    parser.add_argument("algorithm", type=str, choices=ALGORITHMS.keys(), help="Version of algorithm")
+    parser.add_argument("pathG1", type=str, help="Path to tree1")
+    parser.add_argument("pathG2", type=str, help="Path to tree2")
+    parser.add_argument("--time_limit", default=0, dest="limit", type=int, help="Set time limit in seconds for exact algorithm")
+    parser.add_argument("--normalize", action="store_true", help="Normalize similarity by dividing by max nr. of edges in tree1 and tree2")
     parsed_args = parser.parse_args()
     path_G1 = parsed_args.pathG1
     path_G2 = parsed_args.pathG2
@@ -119,4 +104,5 @@ if __name__ == "__main__":
     G2 = nx.read_gml(path_G2, label="id")
  
     sim_value= compute_similarity(name_of_algorithm, G1, G2, parsed_args.limit, parsed_args.normalize)
+    
     
