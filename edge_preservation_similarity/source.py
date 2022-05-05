@@ -37,13 +37,8 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
     G1 = add_depth(G1)
     G2 = add_depth(G2)
 
-    print("Beginning computation of edge perservation similarity...")
-    print("exact or approximated algorithm: " + algorithm)
-
     if time_limit > 0:
         print("time limit: " + str(time_limit))
-
-    print("normalize similarity: " + str(normalize))
 
     tic=time.time()
 
@@ -61,18 +56,12 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
     tac=time.time()
     duration = tac-tic
 
-    
-    print("computation done in: " + str(duration) + "s\n")
-
     if timeflag:
         print("Time limit of " + str(time_limit) + "s exceeded.")
     
             
     if normalize:
         similarity = normalize_similarity(similarity, G1, G2)
-    
-    print("edge preservation similarity: " + str(similarity) + "\n")
-    print("Computation done!")
 
     return similarity, duration
 
@@ -80,9 +69,18 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
 
 ''' This part is for the CLI only, please refer to the READ ME on git for explanation of usage
     short version:  type in cmd:
-                    python edge_preservation_similarity.py "string of path for output" "strings of path of trees" 
-                    optional:   --time_limit=   your custom timelimit in seconds, data type: int
-                                --normalize     flag if you need a normalization'''
+    python source.py "string of path for output" "path to trees"
+
+        path to trees:  2 options:  - path to .txt file with paths to .gml tree files in each line
+                                    - paths to all .gml tree files in a row
+        optional: --algorithm         possibility to choose version of algorithm, either approximated (approx) or exact
+                                      (default: approx)
+                  --time_limit=       possibility to set time limit in seconds for exact algorithm (default: 0 meaning no time
+                                      limit), data type: int
+                  --normalize         flag to normalize similarity by dividing by max nr. of edges in tree1 and tree2
+                                      (default: false, meaning no normalization)
+                  --both_directions   flag to compute similarity between trees in both directions for more    
+                                      precise output (default: false, meaning just one direction)'''
 
 ALGORITHMS = {
     "approx": "EDGE-PRESERVATION-SIM-APPROX",
@@ -95,29 +93,29 @@ if __name__ == "__main__":
     parser.add_argument("graphs", type=str, nargs='+', help="Path to a file with trees or paths to files with trees")
     parser.add_argument("--algorithm", type=str, choices=ALGORITHMS.keys(), help="Version of algorithm (default: approx)")
     parser.add_argument("--time_limit", default=0, dest="limit", type=int, help="Set time limit in seconds for exact algorithm (default: 0 meaning no time limit)")
-    parser.add_argument("--normalize", action="store_true", help="Normalize similarity by dividing by max nr. of edges in tree1 and tree2 (default: no normalization)")
-    parser.add_argument("--both_directions", action="store_true", help="Compute similarity between trees in both directions for more precise output (default: false)")
+    parser.add_argument("--normalize", action="store_true", help="Normalize similarity by dividing by max nr. of edges in tree1 and tree2 (default: false meaning no normalization)")
+    parser.add_argument("--both_directions", action="store_true", help="Compute similarity between trees in both directions for more precise output (default: false meaning just one direction)")
     parsed_args = parser.parse_args()
-    print("len graphs ", len(parsed_args.graphs))
-    #path_G1 = parsed_args.graphs[0]
-    #path_G2 = parsed_args.graphs[1]
+
 
     if parsed_args.algorithm != None:
         name_of_algorithm = ALGORITHMS[parsed_args.algorithm]
     else:
         name_of_algorithm = "EDGE-PRESERVATION-SIM-APPROX"
 
-    #G1 = nx.read_gml(path_G1, label="id")
-    #G2 = nx.read_gml(path_G2, label="id")
-
     if len(parsed_args.graphs) == 1:
-        #  TODO case where we have a file with filepaths to trees as lines
-        graph_coll = 0
-        len_graph_coll = 0
+        #case where we have a file with filepaths to trees as lines
+        with open(parsed_args.graphs[0]) as f:
+            graph_coll = [line.rstrip() for line in f]
+        len_graph_coll = len(graph_coll)
     else:
         #case where we have a list of filepaths to trees
         graph_coll = parsed_args.graphs
         len_graph_coll = len(parsed_args.graphs)
+
+    print("Beginning computation of edge perservation similarity...")
+    print("exact or approximated algorithm: " + name_of_algorithm)
+    print("normalize similarity: " + str(parsed_args.normalize))
 
     
     similarity_matrix = np.zeros((len_graph_coll,len_graph_coll))
@@ -163,6 +161,9 @@ if __name__ == "__main__":
     df_duration_matrix = pd.DataFrame(data=duration_matrix)
     df_similarity_matrix.to_csv(parsed_args.output_path + '/similarity_' + name_of_algorithm + '.csv')
     df_duration_matrix.to_csv(parsed_args.output_path + '/duration_' + name_of_algorithm + '.csv')
+
+    print("Computation done!")
+    print("Results saved to: " + str(parsed_args.output_path))
 
                 
 
