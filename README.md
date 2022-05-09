@@ -9,14 +9,15 @@ https://pages.gurobi.com/registration
 ```
 2. Get free academic licence
 ```
-  link to explanation https://www.gurobi.com/academia/academic-program-and-licenses/
+link to explanation https://www.gurobi.com/academia/academic-program-and-licenses/
 ```
-  2.1 Requesting an academic licence
-  ```
-      https://www.gurobi.com/downloads/end-user-license-agreement-academic/
-  ```
-  2.2 click accept these conditions
-  2.3 follow instuctions at bottom of page and put the grbgetkey with the given numbers in your terminal to install the licence
+2.1 Requesting an academic licence
+```
+https://www.gurobi.com/downloads/end-user-license-agreement-academic/
+```
+2.2 Accept the conditions
+
+2.3 Follow instuctions at bottom of page and put the grbgetkey with the given numbers in your terminal to install the licence
 
 ## Edge-preservation-similarity usage with terminal
 
@@ -28,17 +29,17 @@ pip install git
 ```
 2. Clone this repository
 ```
-git clone git@github TODO!!!!!!!!!!!!!!!!!
+git clone https://github.com/bionetslab/edge-preservation-similarity.git
 ```
 3. Install requirements
 ```
-TODOOOOOO!!!!!!!!!!!!!!
+pip install -r requirements.txt
 ```
 4. Go to folder edge_preservation_similarity
 
 5. Run in terminal
 ```
-usage: python source.py [required arguments] [optional arguments]
+usage: python CLI_eps.py [required arguments] [optional arguments]
 
 required arguments:
         path for output     string containing the path for the location of the output
@@ -57,7 +58,7 @@ optional arguments:
         -h, --help          show this help message and exit
 ```
 ### Result
-The results are given in 2 .csv files:
+The results are given in two .csv files:
 ```
 similarity_name_of_algorithm.csv    containing the edge-preservation-similarity values
 duration_name_of_algorithm.csv      containing the durations for every computation
