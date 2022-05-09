@@ -9,6 +9,7 @@ Created on Wed Jul 14 18:20:28 2021, edited Apr 2022
 import gurobipy as gu
 import networkx as nx
 import numpy as np
+import os
 
 
 
@@ -309,3 +310,30 @@ def normalize_similarity(value, G1, G2):
     edge_count_G2 = G2.number_of_edges()
 
     return value / max(edge_count_G1,edge_count_G2)
+
+
+def import_graph_coll(path):
+    '''reads in gml data and returns a list of lists of graphs''' 
+    graph_coll=[]
+    listdir=os.listdir(path)
+    for dire in listdir:
+        graph_coll.append([])
+        graphdir=os.listdir(path+'/'+dire)
+        for graph_file in graphdir:
+            graph_coll[-1].append(nx.readwrite.gml.read_gml(path+'/'+dire+'/'+graph_file,label='id'))
+    return graph_coll
+
+def graph_coll_edit(coll):
+    '''adds depth data to each vertex in the collection'''
+    for mR in coll:
+        for G in mR:
+           for node in G.nodes:
+               SP=nx.shortest_path_length(G,0)
+               G.nodes[node]['depth']=SP[node]
+    return coll
+
+
+def import_graph_names(path):
+    '''returns a list of names of graphs'''
+    listdir=os.listdir(path)
+    return listdir

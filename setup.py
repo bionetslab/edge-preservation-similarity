@@ -7,5 +7,5 @@ setup(
     author='Jana Kiederle',
     author_email='jana.kiederle@fau.de',
     packages=find_packages(),
-    install_requires=['numpy', 'pandas', 'networkx', 'gurobipy']
+    install_requires=['numpy', 'pandas', 'networkx', 'gurobipy', 'os']
     )

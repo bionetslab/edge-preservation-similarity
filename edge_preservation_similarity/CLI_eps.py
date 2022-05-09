@@ -80,7 +80,7 @@ if __name__ == "__main__":
     
             # check whether you are at a position above the diagonal 
             if i <= j:
-                similarity, duration = compute_similarity(name_of_algorithm, G1, G2, parsed_args.limit, parsed_args.normalize)
+                similarity, duration, _ = compute_similarity(name_of_algorithm, G1, G2, parsed_args.limit, parsed_args.normalize)
                 similarity_matrix[i,j] = similarity
                 duration_matrix[i,j] = duration
 
@@ -97,7 +97,7 @@ if __name__ == "__main__":
                 if parsed_args.both_directions:
                     #if both directions should be computed the maximum of both similarity values is saved
                     compare_value = similarity_matrix[j,i]
-                    similarity, duration = compute_similarity(name_of_algorithm, G1, G2, parsed_args.limit, parsed_args.normalize)
+                    similarity, duration, _ = compute_similarity(name_of_algorithm, G1, G2, parsed_args.limit, parsed_args.normalize)
 
                     if compare_value < similarity:
                         similarity_matrix[i,j] = similarity

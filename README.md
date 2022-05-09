@@ -49,8 +49,8 @@ required arguments:
 optional arguments: 
         --algorithm         possibility to choose version of algorithm, choices: {approx,exact}
                             (default: approx)
-        --time_limit=       possibility to set time limit in seconds for exact algorithm (default: 0 meaning no time
-                            limit), data type: int
+        --time_limit=       possibility to set time limit in seconds for exact algorithm
+                            (default: 0 meaning no time limit), data type: int
         --normalize         flag to normalize similarity by dividing by max nr. of edges in tree1 and tree2
                             (default: false, meaning no normalization)
         --both_directions   flag to compute similarity between trees in both directions for more    

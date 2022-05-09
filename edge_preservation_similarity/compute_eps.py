@@ -31,13 +31,14 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
 
     if time_limit > 0:
         print("time limit: " + str(time_limit))
+    time_limit_exceeded = False
 
     tic=time.time()
 
     timeflag = False
     if algorithm == 'EDGE-PRESERVATION-SIM-EXACT':
         GU=Gurobi_solver(0)
-        timeflag = GU.compute_duos(G1,G2, time_limit)
+        time_limit_exceeded = GU.compute_duos(G1,G2, time_limit)
         similarity = E.evaluate_sol(G1,G2,GU._sol)
 
     elif algorithm == 'EDGE-PRESERVATION-SIM-APPROX':
@@ -55,4 +56,4 @@ def compute_similarity(algorithm, G1, G2, time_limit=0, normalize=False):
     if normalize:
         similarity = normalize_similarity(similarity, G1, G2)
 
-    return similarity, duration
+    return similarity, duration, time_limit_exceeded

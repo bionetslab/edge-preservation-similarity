@@ -8,13 +8,14 @@ import os
 import networkx as nx
 import numpy as np
 import time
-from datetime import date, datetime
 import pandas as pd
 import subprocess
-from edge_preservation_similarity import *
+from edge_preservation_similarity import compute_eps, utils #TODO does not work
+
+#TODO comment everything
 
 
-def compute_scalability(algorithm, max_n_list, in_path, out_path, jar_file_path= ''):
+def compute_scalability(algorithm, max_n_list, input_path, output_path, jar_file_path= ''):
     '''MAIN FUNCTION FOR USE OF ALGORITHM FOR SCALABILITY data
         computes the given algorithm and returns similarity/distance values, runtime and whether a timelimit was reached
         note:   exact means the entire matrix is computed. Symmetry is achieved by maximizing over the respective entries
@@ -23,44 +24,34 @@ def compute_scalability(algorithm, max_n_list, in_path, out_path, jar_file_path=
         input:  algorithm: possibilities    'EDGE-PRESERVATION-SIM-APPROX' for approximation
                                             'EDGE-PRESERVATION-SIM-EXACT' for exact measure
                 time_limit:         time limit in seconds, note: only implemented for 'EDGE-PRESERVATION-SIM-EXACT' as it is NP-hard
-                normalize:          flag, if true results are normalized by division by max(#edges in trees G1 or G2)
-                fast:               flag, if true only upper half of matrix is computed and then mirrored
-                                        -> is less exact for 'EDGE-PRESERVATION-SIM-APPROX'
                 jar_file_path:      only necessary if scalability test should be computed with tree edit distance for comparison
         saves:  report file (txt file)
-                matrices of computed values, runtime and whether the runtime expired (csv files)'''
+                matrices of duration and whether the runtime was exceeded (csv files)'''
 
+    print("Beginning computation of scalability tests of algorithm" + algorithm + "...")
 
 
     E=Evaluator()
     ALG=Approx_alg()
     GU=Gurobi_solver(0)
 
-    date_time = str(date.today().strftime("%b_%d_%Y"))+ "-" + str(datetime.now().strftime("%H_%M"))
-
 
     for i in range(len(max_n_list)):
 
         max_n = max_n_list[i]
 
-        if max_n == 100:
-            print("100")
-
         graph_coll = []
         if algorithm == 'TREE-EDIT-DIST':
-            path = in_path + str(max_n)
+            path = input_path + str(max_n)
         
             dir_list=os.listdir(path)
-            count = ''
             for d in dir_list:
                 #print(d)
-                graph = ''
-                count = str(d)[-1]
                 graph_path = path + "/" + str(d) + "/1.txt"
                 graph_coll.append([graph_path])
 
         else:
-            path = in_path + str(max_n)
+            path = input_path + str(max_n)
 
             graph_coll=import_graph_coll(path)   
             graph_coll=graph_coll_edit(graph_coll)
@@ -69,12 +60,12 @@ def compute_scalability(algorithm, max_n_list, in_path, out_path, jar_file_path=
         
         print('path ', path)   
 
-        outpath = out_path + str(max_n) + '_results_' + algorithm + "_" + date_time
+        outpath = output_path + str(max_n) + '_results_' + algorithm
 
         os.mkdir(outpath)
         f = open(outpath + "/report.txt","a")
 
-        f.write("Report for " + date_time + "\n")
+        f.write("Report \n")
         f.write("inpath: " + str(path) + "\n")
         f.write("outpath: " + str(outpath) + "\n")
         f.write("max_n: " + str(max_n) + "\n")
@@ -83,32 +74,30 @@ def compute_scalability(algorithm, max_n_list, in_path, out_path, jar_file_path=
         if algorithm == 'EDGE-PRESERVATION-SIM-EXACT':
             f.write("time_limit: " + str(time_limit_gurobi) + "\n")
 
-
-        duos= np.zeros((len(graph_names_list),len(graph_names_list)))
         times=np.zeros((len(graph_names_list),len(graph_names_list)))
         time_limit_reached =np.zeros((len(graph_names_list),len(graph_names_list)))
 
         first_time = time.time()
 
-        times, time_limit_reached = compute_scalability_helper(algorithm, graph_coll, times, time_limit_reached, time_limit_gurobi, E, ALG, GU, jar_file_path)
+        duration_matrix, time_limit_exceeded_matrix = compute_scalability_helper(algorithm, graph_coll, times, time_limit_reached, time_limit_gurobi, jar_file_path)
                 
         entire_duration = time.time()-first_time
 
 
         f.write("entire duration: " + str(entire_duration) + "\n")
 
-        df_duos_times = pd.DataFrame(data=times, index=graph_names_list, columns=graph_names_list)
+        df_duration_matrix = pd.DataFrame(data=duration_matrix, index=graph_names_list, columns=graph_names_list)
+        df_time_limit_exceeded_matrix = pd.DataFrame(data=time_limit_exceeded_matrix, index=graph_names_list, columns=graph_names_list)
 
-        df_duos_limit = pd.DataFrame(data=time_limit_reached, index=graph_names_list, columns=graph_names_list)
+        df_duration_matrix.to_csv(outpath + '/duration_' + algorithm + '.csv')
+        df_time_limit_exceeded_matrix.to_csv(outpath + '/time_limit_reached_' + algorithm + '.csv')
 
-        df_duos_times.to_csv(outpath + '/df_times_' + algorithm + '.csv')
-
-        df_duos_limit.to_csv(outpath + '/df_time_limit_reached_' + algorithm + '.csv')
-
-
+    print("Computation done for " + str(algorithm) + "!")
+    print("Results saved to: " + str(output_path))
 
 
-def compute_scalability_helper(algorithm, graph_coll, times, time_limit, time_limit_gurobi, E, ALG, GU, jar_file_path=''):
+
+def compute_scalability_helper(algorithm, graph_coll, times, time_limit, time_limit_gurobi, jar_file_path=''):
     '''helper funtion for scalability tests'''
 
     for i in range(len(graph_coll)):
@@ -131,32 +120,30 @@ def compute_scalability_helper(algorithm, graph_coll, times, time_limit, time_li
 
                 tic=time.time()
 
-                timeflag = False
-                if algorithm == 'EDGE-PRESERVATION-SIM-EXACT':              
-                    timeflag = GU.compute_duos(G1,G2, time_limit_gurobi)
-                    print(timeflag)
-                    
-                elif algorithm == 'EDGE-PRESERVATION-SIM-APPROX':
-                    ALG.compute_duos(G1,G2)
+                time_limit_exceeded = False
+                duration = 0.0
 
-                elif algorithm == 'TREE-EDIT-DIST':
+                if algorithm == 'TREE-EDIT-DIST':
                     test = 0
                     test = subprocess.call(['java', '-jar', jar_file_path, '-f', G1, G2, '-c', '1', '1', '1', '-s', 'left', '--switch'])
                     if test != 0:
                         print("something failed in executing tree edit dist jar file at ", i,j)
                         print("error code: ", test)
+                    duration = time.time() - tic
+                else:
+                    _, duration, time_limit_exceeded = compute_similarity(algorithm, G1, G2, time_limit_gurobi, False)
 
                 tac=time.time()
 
-                if timeflag:
+                if time_limit_exceeded:
                     times[i][j] = 0.0
                     time_limit[i][j] = True
                 else:
-                    times[i,j]=tac-tic
+                    times[i,j] = duration
                 
-                print("Duration ", tac-tic)
+                print("Duration ", duration)
 
-    return times, time_limit
+    return times, time_limit_exceeded
 
 
 
@@ -211,8 +198,7 @@ def get_random_pruefer_trees(max_n):
         i_helper_list = []
         for m_n in random_list:
             pruefer_code = get_pruefer(max_n=m_n+1, len=(m_n-1))
-            print("max_n", m_n)
-            print(len(pruefer_code))
+
             pruefer_tree = get_pruefer_tree(pruefer_code)
             print(pruefer_tree.size())
 
@@ -233,13 +219,13 @@ max_n = 100
 
 path = "/home/jana/Documents/BIONETs/Code/tree_match_approx_validator/all_other_data/scalability_trees"
 
-make_prufer_trees(max_n, path)
+#make_prufer_trees(max_n, path)
 
 
 # choose 'EDGE-PRESERVATION-SIM-APPROX' for approximation or 'EDGE-PRESERVATION-SIM-EXACT' for exact measure, or 'TREE-EDIT-DIST' for tree edit distance
-algorithm = 'TREE-EDIT-DIST'
+algorithm = ['EDGE-PRESERVATION-SIM-APPROX']
 time_limit_gurobi = 600   #10 min but only used for GUROBI
-all_max_n = [20, 40]
+all_max_n = [20]
 
 #path = "/home/jana/Documents/BIONETs/Code/tree_match_approx_validator/all_other_data/gml_data"
 gml_path="/home/jana/Documents/BIONETs/Code/tree_match_approx_validator/all_other_data/scalability_trees/tree_blocks_gml/"
@@ -250,3 +236,11 @@ jar_file_path = '/home/jana/Documents/BIONETs/Code/edge-preservation-similarity/
 result_path = "/home/jana/Documents/BIONETs/Code/tree_match_approx_validator/final_results_data/results/"
 
 #compute_scalability(algorithm, all_max_n, bracket_path, result_path, jar_file_path)
+
+### make this a main function like in CLI_eps?
+print("Beginning computation of edge perservation similarity...")
+
+for alg in algorithm:
+    compute_scalability(algorithm, all_max_n, bracket_path, result_path, jar_file_path)
+
+print("Scalability computation done!")
