@@ -10,8 +10,14 @@ import numpy as np
 import time
 import pandas as pd
 import subprocess
-from edge_preservation_similarity import compute_eps, utils #TODO does not work
+import argparse
 
+#import edge_preservation_similarity
+#from edge_preservation_similarity.utils import *
+#from edge_preservation_similarity import * #TODO does not work
+from compute_eps import *
+from utils import *
+from bracket_gml_parser import *
 #TODO comment everything
 
 
@@ -28,12 +34,7 @@ def compute_scalability(algorithm, max_n_list, input_path, output_path, jar_file
         saves:  report file (txt file)
                 matrices of duration and whether the runtime was exceeded (csv files)'''
 
-    print("Beginning computation of scalability tests of algorithm" + algorithm + "...")
-
-
-    E=Evaluator()
-    ALG=Approx_alg()
-    GU=Gurobi_solver(0)
+    print("Beginning computation of scalability tests of algorithm" + str(algorithm) + "...")
 
 
     for i in range(len(max_n_list)):
@@ -60,7 +61,7 @@ def compute_scalability(algorithm, max_n_list, input_path, output_path, jar_file
         
         print('path ', path)   
 
-        outpath = output_path + str(max_n) + '_results_' + algorithm
+        outpath = output_path + str(max_n) + '_results_' + str(algorithm)
 
         os.mkdir(outpath)
         f = open(outpath + "/report.txt","a")
@@ -69,7 +70,7 @@ def compute_scalability(algorithm, max_n_list, input_path, output_path, jar_file
         f.write("inpath: " + str(path) + "\n")
         f.write("outpath: " + str(outpath) + "\n")
         f.write("max_n: " + str(max_n) + "\n")
-        f.write("algorithm: " + algorithm + "\n")   
+        f.write("algorithm: " + str(algorithm) + "\n")   
         
         if algorithm == 'EDGE-PRESERVATION-SIM-EXACT':
             f.write("time_limit: " + str(time_limit_gurobi) + "\n")
@@ -93,7 +94,6 @@ def compute_scalability(algorithm, max_n_list, input_path, output_path, jar_file
         df_time_limit_exceeded_matrix.to_csv(outpath + '/time_limit_reached_' + algorithm + '.csv')
 
     print("Computation done for " + str(algorithm) + "!")
-    print("Results saved to: " + str(output_path))
 
 
 
@@ -166,8 +166,13 @@ def make_prufer_trees(max_n, out_path):
             tree_folder_path = folder_path + "/" + str(max_n) + "_" + str(j)
             os.mkdir(tree_folder_path)
             tree_path = tree_folder_path + '/1.gml'
-            #safe file
+            #safe gml file
             nx.write_gml(tree_array[i][j], tree_path)
+
+            #make and safe the bracket version for TREE EDIT DIST usage
+            tree_bracket = gml_to_bracket_helper(tree_array[i][j], bracket_string = '', visited = [], node = 0)
+            f = open(folder_path + "/" + str(max_n) + "_" + str(j) + "/1.txt","a")
+            f.write(tree_bracket)
     
 
 def get_pruefer(min_n=0, max_n=10, len=8):
@@ -186,13 +191,12 @@ def get_random_pruefer_trees(max_n):
 
     # split 1 to max_n in 10 buckets
     splitting = np.linspace(1, max_n, num=6).astype(int)
-    print(splitting)
+    print("Steps: " + str(splitting))
 
     helper_list = []
     # draw 5 times with replacement to get random list of max_n for each bucket
     for i in range(5):
         random_list = get_pruefer(min_n=splitting[i]+1, max_n=splitting[i+1]+1, len=5)
-        print(random_list)
 
         #create pruefer codes and trees for each max_n in random_list
         i_helper_list = []
@@ -200,7 +204,6 @@ def get_random_pruefer_trees(max_n):
             pruefer_code = get_pruefer(max_n=m_n+1, len=(m_n-1))
 
             pruefer_tree = get_pruefer_tree(pruefer_code)
-            print(pruefer_tree.size())
 
             #adjust labels and directedness of the trees
             nx.set_node_attributes(pruefer_tree, "A", "lbl")
@@ -214,33 +217,59 @@ def get_random_pruefer_trees(max_n):
     return random_pruefer_tree_array
 
 
-max_n = 100
-#tree_array = get_random_pruefer_trees(max_n)
-
-path = "/home/jana/Documents/BIONETs/Code/tree_match_approx_validator/all_other_data/scalability_trees"
-
-#make_prufer_trees(max_n, path)
 
 
-# choose 'EDGE-PRESERVATION-SIM-APPROX' for approximation or 'EDGE-PRESERVATION-SIM-EXACT' for exact measure, or 'TREE-EDIT-DIST' for tree edit distance
-algorithm = ['EDGE-PRESERVATION-SIM-APPROX']
-time_limit_gurobi = 600   #10 min but only used for GUROBI
-all_max_n = [20]
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="CLI for the scalability tests of the edge-preservation-similarity")
+    parser.add_argument("output_path", type=str, help="Path to folder where output should be saved")
+    parser.add_argument("--new_trees", action="store_true", help="flag to compute new scalability trees (default: false, meaning results from paper will be reproduced)")
+    parser.add_argument("--time_limit", default=0, dest="limit", type=int, help="Set time limit in seconds for exact eps algorithm (default: 0 meaning no time limit)")
+    parsed_args = parser.parse_args()
 
-#path = "/home/jana/Documents/BIONETs/Code/tree_match_approx_validator/all_other_data/gml_data"
-gml_path="/home/jana/Documents/BIONETs/Code/tree_match_approx_validator/all_other_data/scalability_trees/tree_blocks_gml/"
-bracket_path = "/home/jana/Documents/BIONETs/Code/tree_match_approx_validator/all_other_data/scalability_trees/tree_blocks_bracket/"
+    # 'EDGE-PRESERVATION-SIM-APPROX' for approximation or 'EDGE-PRESERVATION-SIM-EXACT' for exact measure, or 'TREE-EDIT-DIST' for tree edit distance
+    algorithms = ['EDGE-PRESERVATION-SIM-APPROX', 'TREE-EDIT-DIST']
+    time_limit_gurobi = 600   #10 min but only used for GUROBI
+    all_max_n = [20, 40]
+    out_path = parsed_args.output_path + "/"
 
-jar_file_path = '/home/jana/Documents/BIONETs/Code/edge-preservation-similarity/notebooks_python/RTED_v1.2.jar'
+    if parsed_args.new_trees:
+        print("Computing new trees...")
+        max_n = 100
+        tree_path = out_path + "/trees"
+        os.mkdir(tree_path)
+        make_prufer_trees(max_n, tree_path)
+        print("Computing new trees done!")
+        print("\n")
 
-result_path = "/home/jana/Documents/BIONETs/Code/tree_match_approx_validator/final_results_data/results/"
 
-#compute_scalability(algorithm, all_max_n, bracket_path, result_path, jar_file_path)
 
-### make this a main function like in CLI_eps?
-print("Beginning computation of edge perservation similarity...")
+    helper_gml_path= os.path.normpath("final_results_data/data/scalability_trees/tree_blocks_gml/")
+    gml_path = os.path.abspath(helper_gml_path) + "/"
 
-for alg in algorithm:
-    compute_scalability(algorithm, all_max_n, bracket_path, result_path, jar_file_path)
+    #bracket_path = "/home/jana/Documents/BIONETs/Code/test/"
+    helper_bracket_path = os.path.normpath("final_results_data/data/scalability_trees/tree_blocks_bracket/")
+    bracket_path = os.path.abspath(helper_bracket_path) + "/"
 
-print("Scalability computation done!")
+    jf_path = 'RTED_v1.2.jar'
+    jar_file_path = os.path.abspath(jf_path)
+
+    result_path = "/home/jana/Documents/BIONETs/Code/Datasets_code/"
+
+    print("Beginning computation of edge perservation similarity...")
+
+    for alg in algorithms:
+        if alg == 'TREE-EDIT-DIST':
+            tree_path = bracket_path
+        else:
+            tree_path = gml_path
+        compute_scalability(alg, all_max_n, tree_path, out_path, jar_file_path)
+        print("\n")
+
+    print("Scalability computation done!")
+    print("Results saved to: " + str(parsed_args.output_path))
+
+                
+
+ 
+    
+    
