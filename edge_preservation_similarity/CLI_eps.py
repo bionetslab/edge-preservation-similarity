@@ -55,6 +55,7 @@ if __name__ == "__main__":
     else:
         name_of_algorithm = "EDGE-PRESERVATION-SIM-APPROX"
 
+    #read in trees
     if len(parsed_args.graphs) == 1:
         #case where we have a file with filepaths to trees as lines
         with open(parsed_args.graphs[0]) as f:

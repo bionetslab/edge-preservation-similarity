@@ -54,7 +54,7 @@ def compute_scalability(algorithm, max_n_list, input_path, output_path, jar_file
         else:
             path = input_path + str(max_n)
 
-            graph_coll=import_graph_coll(path)   
+            graph_coll=import_graph_coll_scal(path)   
             graph_coll=graph_coll_edit(graph_coll)
         
         graph_names_list = import_graph_names(path)
@@ -216,6 +216,17 @@ def get_random_pruefer_trees(max_n):
     random_pruefer_tree_array = np.array(helper_list, dtype=object)
     return random_pruefer_tree_array
 
+def import_graph_coll_scal(path):
+    '''reads in gml data and returns a list of lists of graphs''' 
+    graph_coll=[]
+    listdir=os.listdir(path)
+    for dire in listdir:
+        print(str(dire))
+        graph_coll.append([])
+        print(str(path+'/'+dire+'/1.gml'))
+        graph_coll[-1].append(nx.readwrite.gml.read_gml(path+'/'+dire+'/1.gml',label='id'))
+    return graph_coll
+
 
 
 
@@ -226,10 +237,10 @@ if __name__ == "__main__":
     parser.add_argument("--time_limit", default=0, dest="limit", type=int, help="Set time limit in seconds for exact eps algorithm (default: 0 meaning no time limit)")
     parsed_args = parser.parse_args()
 
-    # 'EDGE-PRESERVATION-SIM-APPROX' for approximation or 'EDGE-PRESERVATION-SIM-EXACT' for exact measure, or 'TREE-EDIT-DIST' for tree edit distance
-    algorithms = ['EDGE-PRESERVATION-SIM-APPROX', 'TREE-EDIT-DIST']
+    # 'EDGE-PRESERVATION-SIM-APPROX' for approximation,'EDGE-PRESERVATION-SIM-EXACT' for exact measure, 'TREE-EDIT-DIST' for tree edit distance
+    algorithms = ['EDGE-PRESERVATION-SIM-APPROX', 'EDGE-PRESERVATION-SIM-EXACT', 'TREE-EDIT-DIST']
     time_limit_gurobi = 600   #10 min but only used for GUROBI
-    all_max_n = [20, 40]
+    all_max_n = [20, 40, 60, 80, 100]
     out_path = parsed_args.output_path + "/"
 
     if parsed_args.new_trees:
@@ -238,6 +249,7 @@ if __name__ == "__main__":
         tree_path = out_path + "/trees"
         os.mkdir(tree_path)
         make_prufer_trees(max_n, tree_path)
+        tree_path += "/"
         print("Computing new trees done!")
         print("\n")
 
@@ -247,21 +259,21 @@ if __name__ == "__main__":
     gml_path = os.path.abspath(helper_gml_path) + "/"
 
     #bracket_path = "/home/jana/Documents/BIONETs/Code/test/"
-    helper_bracket_path = os.path.normpath("final_results_data/data/scalability_trees/tree_blocks_bracket/")
+    helper_bracket_path = os.path.normpath("final_results_data/data/scalability_trees/tree_blocks_gml/")
     bracket_path = os.path.abspath(helper_bracket_path) + "/"
 
     jf_path = 'RTED_v1.2.jar'
     jar_file_path = os.path.abspath(jf_path)
 
-    result_path = "/home/jana/Documents/BIONETs/Code/Datasets_code/"
 
     print("Beginning computation of edge perservation similarity...")
 
     for alg in algorithms:
-        if alg == 'TREE-EDIT-DIST':
-            tree_path = bracket_path
-        else:
-            tree_path = gml_path
+        if not parsed_args.new_trees:
+            if alg == 'TREE-EDIT-DIST':
+                tree_path = bracket_path
+            else:
+                tree_path = gml_path
         compute_scalability(alg, all_max_n, tree_path, out_path, jar_file_path)
         print("\n")
 
