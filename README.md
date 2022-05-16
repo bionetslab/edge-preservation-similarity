@@ -1,5 +1,7 @@
 # Edge-Preservation-Similarity
-This git provides an exact and an approximated algorithm for computing the edge-preservation similarity between rooted, unordered, node-labeled trees.
+This git provides an exact and an approximated algorithm for computing the edge-preservation similarity between rooted, unordered, node-labeled trees. 
+
+In order to be able to compute the edge-preservation-similarity or run any test first gurobi has to be installed.
 
 ## GUROBI
 
@@ -49,7 +51,7 @@ required arguments:
 optional arguments: 
         --algorithm         possibility to choose version of algorithm, choices: {approx,exact}
                                 (default: approx)
-        --time_limit=       possibility to set time limit in seconds for exact algorithm
+        --time_limit        possibility to set time limit in seconds for exact algorithm
                                 (default: 0 meaning no time limit), data type: int
         --normalize         flag to normalize similarity by dividing by max nr. of edges in tree1 and tree2
                                 (default: false, meaning no normalization)
@@ -125,3 +127,14 @@ pip install -r requirements.txt
 4. Go to folder tests
 
 5. Run in terminal
+```
+usage: validation_test.py [required arguments] [optional arguments]
+
+CLI for the validation tests of the edge-preservation-similarity
+
+required arguments:
+  output_path         Path to folder where output should be saved
+
+optional arguments:
+  -h, --help          show this help message and exit
+```

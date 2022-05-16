@@ -336,4 +336,5 @@ def graph_coll_edit(coll):
 def import_graph_names(path):
     '''returns a list of names of graphs'''
     listdir=os.listdir(path)
+    listdir = [x for x in listdir if "._" not in x]
     return listdir

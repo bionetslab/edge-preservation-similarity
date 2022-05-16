@@ -38,7 +38,7 @@ def compute_similarities_for_validation(algorithm, input_path, output_path, jar_
         saves:  report file (txt file)
                 similarity matrix (csv file)'''
 
-    print("Beginning computation of similarity with algorithm" + str(algorithm) + "...") 
+    print("Beginning computation of similarity with algorithm " + str(algorithm) + "...") 
 
     #reading in all trees into the graph collection
     graph_coll = []
@@ -47,9 +47,9 @@ def compute_similarities_for_validation(algorithm, input_path, output_path, jar_
     
         dir_list=os.listdir(path)
         for d in dir_list:
-            #print(d)
-            graph_path = path + "/" + str(d) + "/1.txt"
-            graph_coll.append([graph_path])
+            if not "._" in str(d):
+                graph_path = path + "/" + str(d) + "/1.txt"
+                graph_coll.append([graph_path])
 
     else:
         path = input_path
@@ -59,69 +59,59 @@ def compute_similarities_for_validation(algorithm, input_path, output_path, jar_
     
     graph_names_list = import_graph_names(path)
     
-    print('path ', path)   
-
-    outpath = output_path + '_results_' + str(algorithm)
-
-    os.mkdir(outpath)
-    f = open(outpath + "/report.txt","a")
-
-    f.write("Report \n")
-    f.write("inpath: " + str(path) + "\n")
-    f.write("outpath: " + str(outpath) + "\n")
-    f.write("algorithm: " + str(algorithm) + "\n")   
+    print('path ', path)  
     
 
-    similarity = np.zeros((len(graph_names_list),len(graph_names_list)))
+    similarity_matrix = np.zeros((len(graph_names_list),len(graph_names_list)))
 
     first_time = time.time()
 
-    similarity_matrix = compute_scalability_helper(algorithm, graph_coll, similarity, jar_file_path)
+    similarity_matrix = compute_similarity_helper(algorithm, graph_coll, similarity_matrix, jar_file_path)
             
     entire_duration = time.time()-first_time
-
-
-    f.write("entire duration: " + str(entire_duration) + "\n")
 
     df_similarity_matrix = pd.DataFrame(data=similarity_matrix, index=graph_names_list, columns=graph_names_list)
  
     sort_matrix(df_similarity_matrix)
 
-    df_similarity_matrix.to_csv(outpath + '/similarity_' + algorithm + '.csv')
+    if algorithm == 'TREE-EDIT-DIST':
+        #transform the distance matrix to a similarity matrix for easy comparison
+        df_similarity_matrix = dist_to_similarity_matrix(df_similarity_matrix)
+
+    df_similarity_matrix.to_csv(output_path + '/similarity_' + algorithm + '.csv')
 
     print("Computation done for " + str(algorithm) + "!")
 
 
 
-def compute_scalability_helper(algorithm, graph_coll, similarity, jar_file_path=''):
+def compute_similarity_helper(algorithm, graph_coll, similarity_matrix, jar_file_path=''):
     '''helper funtion for scalability tests'''
 
     for i in range(len(graph_coll)):
         for j in range(len(graph_coll)):
-            G1=graph_coll[i,0]
-            G2=graph_coll[j,0]
+            G1=graph_coll[i][0]
+            G2=graph_coll[j][0]
 
             if i <= j:
                 # above diagonal of matrix              
 
                 tic=time.time()
                 duration = 0.0
+                similarity = 0.0
 
                 if algorithm == 'TREE-EDIT-DIST':
                     #TODO: problem with getting values for TED
-                    test = 0
-                    test = subprocess.call(['java', '-jar', jar_file_path, '-f', G1, G2, '-c', '1', '1', '1', '-s', 'left', '--switch'])
-                    if test != 0:
-                        print("something failed in executing tree edit dist jar file at ", i,j)
-                        print("error code: ", test)
+                    similarity = 0
+                    similarity = str(subprocess.check_output(['java', '-jar', 'RTED_v1.2.jar', '-f', G1, G2, '-c', '1', '1', '1', '-s', 'left', '--switch']))[2:-3]
+                    print("similarity ",similarity)
                     duration = time.time() - tic
                 else:
-                    sim, _, _ = compute_similarity(algorithm, G1, G2, True)
+                    similarity, duration, _ = compute_similarity(algorithm, G1, G2, normalize=True)
 
 
-                similarity[i,j] = sim
+                similarity_matrix[i][j] = similarity
                 if algorithm != 'EDGE-PRESERVATION-SIM-APPROX':
-                    similarity[j,i] = sim
+                    similarity_matrix[j][i] = similarity
 
                 
                 print("Duration ", duration)
@@ -130,20 +120,16 @@ def compute_scalability_helper(algorithm, graph_coll, similarity, jar_file_path=
                 #only necessary for approximation of edge-preservation-similarity as 'EDGE-PRESERVATION-SIM-EXACT' and 'TREE-EDIT-DIST' are exact measures
 
                 if algorithm == 'EDGE-PRESERVATION-SIM-APPROX':
-                    compare_value = similarity[j,i]
-                    sim, _, _ = compute_similarity(algorithm, G1, G2, True)
+                    compare_value = similarity_matrix[j][i]
+                    similarity, _, _ = compute_similarity(algorithm, G1, G2, normalize=True)
 
                     if compare_value < similarity:
-                        similarity[i,j] = similarity
-                        similarity[j,i] = similarity
+                        similarity_matrix[i][j] = similarity
+                        similarity_matrix[j][i] = similarity
                     else:
-                        similarity[i,j] = similarity[j,i]
+                        similarity_matrix[i][j] = similarity_matrix[j][i]
 
-        if algorithm == 'TREE-EDIT-DIST':
-            #transform the distance matrix to a similarity matrix for easy comparison
-            similarity = dist_to_similarity_matrix(similarity)
-
-    return similarity
+    return similarity_matrix
 
 def sort_matrix(df):
     '''sort matrix by index'''
@@ -259,12 +245,10 @@ def evaluate_similarity_results(df_approx, df_gurobi, df_tree_edit, functional_s
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CLI for the validation tests of the edge-preservation-similarity")
     parser.add_argument("output_path", type=str, help="Path to folder where output should be saved")
-    parser.add_argument("--time_limit", default=0, dest="limit", type=int, help="Set time limit in seconds for exact eps algorithm, only for single computations (default: 0 meaning no time limit)")
     parsed_args = parser.parse_args()
 
     # 'EDGE-PRESERVATION-SIM-APPROX' for approximation or 'EDGE-PRESERVATION-SIM-EXACT' for exact measure, or 'TREE-EDIT-DIST' for tree edit distance
-    algorithms = ['EDGE-PRESERVATION-SIM-APPROX', 'TREE-EDIT-DIST']
-    time_limit_gurobi = 600   #10 min but only used for GUROBI
+    algorithms = ['TREE-EDIT-DIST']
 
     out_path = parsed_args.output_path + "/"
 
@@ -300,9 +284,9 @@ if __name__ == "__main__":
 
     print("Starting evaluation...")
 
-    df_approx = pd.read_csv (out_path + '/similarity_EDGE-PRESERVATION-SIM-APPROX.csv', index_col=0)
-    df_gurobi = pd.read_csv (out_path + '/similarity_EDGE-PRESERVATION-SIM-EXACT.csv', index_col=0)
-    df_tree_edit = pd.read_csv(out_path + '/similarity_TREE-EDIT-DIST.csv', index_col=0)         
+    df_approx = pd.read_csv (out_path + '/similarity_EDGE-PRESERVATION-SIM-APPROX_1.csv', index_col=0)
+    df_gurobi = pd.read_csv (out_path + '/similarity_EDGE-PRESERVATION-SIM-EXACT_1.csv', index_col=0)
+    df_tree_edit = pd.read_csv(out_path + '/similarity_TREE-EDIT-DIST_1.csv', index_col=0)         
     #get jaccard GO matrix (functional similarity matrix)
     functional_similarity_matrix = compute_functional_matrix(excel_path)
 
