@@ -4,9 +4,20 @@ Created on Apr 2022
 @authors: jkiederle
 """
 
-import functools
+''' This test should be run using the CLI, please refer to the READ ME on git for detailed explanation of usage
+    short version:  type in cmd:
+    usage: python validation_test.py [required arguments] [optional arguments]
+
+    required arguments:
+        output_path  Path to folder where output should be saved
+
+    optional arguments:
+        -h, --help   show this help message and exit'''
+
+
+import inspect
 import os
-import networkx as nx
+import sys
 import numpy as np
 import time
 import pandas as pd
@@ -16,14 +27,12 @@ import itertools
 from sklearn.metrics.cluster import normalized_mutual_info_score, mutual_info_score, adjusted_mutual_info_score
 from numpy import linalg as LA
 
-#import edge_preservation_similarity
-#from edge_preservation_similarity.utils import *
-#from edge_preservation_similarity import * #TODO does not work
-from compute_eps import *
-from utils import *
+UTILS_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+BASE_DIR = os.path.dirname(UTILS_DIR)
+sys.path.append(BASE_DIR)
+from edge_preservation_similarity.utils import *
+from edge_preservation_similarity.compute_eps import *
 from bracket_gml_parser import *
-#TODO comment everything
-
 
 def compute_similarities_for_validation(algorithm, input_path, output_path, jar_file_path= ''):
     '''MAIN FUNCTION FOR USE OF ALGORITHM FOR VALIDATION
@@ -106,7 +115,7 @@ def compute_similarity_helper(algorithm, graph_coll, similarity_matrix, jar_file
                     print("similarity ",similarity)
                     duration = time.time() - tic
                 else:
-                    similarity, duration, _ = compute_similarity(algorithm, G1, G2, normalize=True)
+                    similarity, duration, _ = compute_similarity(algorithm, G1, G2, normalize=False)
 
 
                 similarity_matrix[i][j] = similarity
@@ -121,7 +130,7 @@ def compute_similarity_helper(algorithm, graph_coll, similarity_matrix, jar_file
 
                 if algorithm == 'EDGE-PRESERVATION-SIM-APPROX':
                     compare_value = similarity_matrix[j][i]
-                    similarity, _, _ = compute_similarity(algorithm, G1, G2, normalize=True)
+                    similarity, _, _ = compute_similarity(algorithm, G1, G2, normalize=False)
 
                     if compare_value < similarity:
                         similarity_matrix[i][j] = similarity
@@ -248,7 +257,7 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
 
     # 'EDGE-PRESERVATION-SIM-APPROX' for approximation or 'EDGE-PRESERVATION-SIM-EXACT' for exact measure, or 'TREE-EDIT-DIST' for tree edit distance
-    algorithms = ['TREE-EDIT-DIST']
+    algorithms = ['EDGE-PRESERVATION-SIM-APPROX', 'EDGE-PRESERVATION-SIM-EXACT' ]
 
     out_path = parsed_args.output_path + "/"
 
@@ -275,7 +284,7 @@ if __name__ == "__main__":
             tree_path = bracket_path
         else:
             tree_path = gml_path
-        #compute_similarities_for_validation(alg, tree_path, out_path, jar_file_path)
+        compute_similarities_for_validation(alg, tree_path, out_path, jar_file_path)
         print("\n")
 
     print("Similarity computation done!")
@@ -284,9 +293,9 @@ if __name__ == "__main__":
 
     print("Starting evaluation...")
 
-    df_approx = pd.read_csv (out_path + '/similarity_EDGE-PRESERVATION-SIM-APPROX_1.csv', index_col=0)
-    df_gurobi = pd.read_csv (out_path + '/similarity_EDGE-PRESERVATION-SIM-EXACT_1.csv', index_col=0)
-    df_tree_edit = pd.read_csv(out_path + '/similarity_TREE-EDIT-DIST_1.csv', index_col=0)         
+    df_approx = pd.read_csv (out_path + '/similarity_EDGE-PRESERVATION-SIM-APPROX.csv', index_col=0)
+    df_gurobi = pd.read_csv (out_path + '/similarity_EDGE-PRESERVATION-SIM-EXACT.csv', index_col=0)
+    df_tree_edit = pd.read_csv(out_path + '/similarity_TREE-EDIT-DIST.csv', index_col=0)         
     #get jaccard GO matrix (functional similarity matrix)
     functional_similarity_matrix = compute_functional_matrix(excel_path)
 
@@ -294,9 +303,3 @@ if __name__ == "__main__":
     
     print("Evaluation done!\n")
     print(summary_df)
-
-                
-
- 
-    
-    

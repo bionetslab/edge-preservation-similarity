@@ -4,3 +4,9 @@ pandas
 networkx
 gurobipy
 os
+sys
+inspect
+sklearn.metrics.cluster
+itertools
+argparse
+subprocess

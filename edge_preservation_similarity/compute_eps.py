@@ -1,5 +1,11 @@
 import time
-from utils import *
+import os
+import sys
+import inspect
+UTILS_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+BASE_DIR = os.path.dirname(UTILS_DIR)
+sys.path.append(BASE_DIR)
+from edge_preservation_similarity.utils import *
 
 
 

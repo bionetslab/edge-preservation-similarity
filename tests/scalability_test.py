@@ -4,7 +4,21 @@ Created on Apr 2022
 @authors: jkiederle
 """
 
+''' This test should be run using the CLI, please refer to the READ ME on git for detailed explanation of usage
+    short version:  type in cmd:
+    usage: python validation_test.py [required arguments] [optional arguments]
+
+    required arguments:
+        output_path         Path to folder where output should be saved
+
+    optional arguments:
+        -h, --help          show this help message and exit
+        --new_trees         flag to compute new scalability trees (default: false, meaning results from paper will be reproduced)
+        --time_limit LIMIT  Set time limit in seconds for exact eps algorithm (default: 0 meaning no time limit)'''
+
 import os
+import sys
+import inspect
 import networkx as nx
 import numpy as np
 import time
@@ -12,13 +26,12 @@ import pandas as pd
 import subprocess
 import argparse
 
-#import edge_preservation_similarity
-#from edge_preservation_similarity.utils import *
-#from edge_preservation_similarity import * #TODO does not work
-from compute_eps import *
-from utils import *
+UTILS_DIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+BASE_DIR = os.path.dirname(UTILS_DIR)
+sys.path.append(BASE_DIR)
+from edge_preservation_similarity.utils import *
+from edge_preservation_similarity.compute_eps import *
 from bracket_gml_parser import *
-#TODO comment everything
 
 
 def compute_scalability(algorithm, max_n_list, input_path, output_path, jar_file_path= ''):

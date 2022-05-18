@@ -133,8 +133,8 @@ usage: validation_test.py [required arguments] [optional arguments]
 CLI for the validation tests of the edge-preservation-similarity
 
 required arguments:
-  output_path         Path to folder where output should be saved
+        output_path         Path to folder where output should be saved
 
 optional arguments:
-  -h, --help          show this help message and exit
+        -h, --help          show this help message and exit
 ```

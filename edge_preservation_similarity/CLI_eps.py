@@ -13,7 +13,7 @@ from compute_eps import compute_similarity
 import argparse
 
 
-''' This part is for the CLI only, please refer to the READ ME on git for explanation of usage
+''' This part is for the CLI only, please refer to the READ ME on git for detailed explanation of usage
     short version:  type in cmd:
     usage: python CLI_eps.py [required arguments] [optional arguments]
 
