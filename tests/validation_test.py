@@ -54,11 +54,14 @@ def compute_similarities_for_validation(algorithm, input_path, output_path, jar_
     if algorithm == 'TREE-EDIT-DIST':
         path = input_path
     
-        dir_list=os.listdir(path)
-        for d in dir_list:
-            if not "._" in str(d):
-                graph_path = path + "/" + str(d) + "/1.txt"
-                graph_coll.append([graph_path])
+        listdir=os.listdir(path)
+        for dire in listdir:
+            if not "._" in str(dire):
+                graph_coll.append([])
+                graphdir=os.listdir(path+'/'+dire)
+                for graph_file in graphdir:
+                    if not "._" in str(graph_file):
+                        graph_coll[-1].append(path + "/" + dire + "/" + graph_file)
 
     else:
         path = input_path
@@ -98,39 +101,49 @@ def compute_similarity_helper(algorithm, graph_coll, similarity_matrix, jar_file
 
     for i in range(len(graph_coll)):
         for j in range(len(graph_coll)):
-            G1=graph_coll[i][0]
-            G2=graph_coll[j][0]
 
             if i <= j:
-                # above diagonal of matrix              
+                # above diagonal of matrix    
 
-                tic=time.time()
-                duration = 0.0
-                similarity = 0.0
+                sim_values = np.zeros((len(graph_coll[i]),len(graph_coll[j])))
+                for ii in range(len(graph_coll[i])):
+                    for jj in range(len(graph_coll[j])):
+                        
+                        G1 = graph_coll[i][ii]
+                        G2 = graph_coll[j][jj]
 
-                if algorithm == 'TREE-EDIT-DIST':
-                    #TODO: problem with getting values for TED
-                    similarity = 0
-                    similarity = str(subprocess.check_output(['java', '-jar', 'RTED_v1.2.jar', '-f', G1, G2, '-c', '1', '1', '1', '-s', 'left', '--switch']))[2:-3]
-                    print("similarity ",similarity)
-                    duration = time.time() - tic
-                else:
-                    similarity, duration, _ = compute_similarity(algorithm, G1, G2, normalize=False)
+                        if algorithm == 'TREE-EDIT-DIST':
+                            sim_values[ii,jj] = 0
+                            sim_values[ii,jj] = str(subprocess.check_output(['java', '-jar', 'RTED_v1.2.jar', '-f', G1, G2, '-c', '1', '1', '1', '-s', 'left', '--switch']))[2:-3]
+                            similarity = np.min(sim_values)
+                        else:
+                            sim_values[ii,jj], _, _ = compute_similarity(algorithm, G1, G2, normalize=True)
+                            similarity = np.max(sim_values)
+
+                print("similarity: ",similarity)
 
 
                 similarity_matrix[i][j] = similarity
                 if algorithm != 'EDGE-PRESERVATION-SIM-APPROX':
-                    similarity_matrix[j][i] = similarity
+                    similarity_matrix[j][i] = similarity               
 
-                
-                print("Duration ", duration)
             else:
                 #position below diagonal, similarity of both directions should be computed, the maximum of both similarity values is saved
                 #only necessary for approximation of edge-preservation-similarity as 'EDGE-PRESERVATION-SIM-EXACT' and 'TREE-EDIT-DIST' are exact measures
 
                 if algorithm == 'EDGE-PRESERVATION-SIM-APPROX':
+                    
+                    sim_values = np.zeros((len(graph_coll[i]),len(graph_coll[j])))
+                    for ii in range(len(graph_coll[i])):
+                        for jj in range(len(graph_coll[j])):
+                            
+                            G1 = graph_coll[i][ii]
+                            G2 = graph_coll[j][jj]
+
+                            sim_values[ii,jj], _, _ = compute_similarity(algorithm, G1, G2, normalize=True)
+                    similarity = np.max(sim_values)
+
                     compare_value = similarity_matrix[j][i]
-                    similarity, _, _ = compute_similarity(algorithm, G1, G2, normalize=False)
 
                     if compare_value < similarity:
                         similarity_matrix[i][j] = similarity
@@ -242,7 +255,7 @@ def evaluate_similarity_results(df_approx, df_gurobi, df_tree_edit, functional_s
     frobenius_gurobi = LA.norm(dist_gurobi)
     frobenius_tree_edit = LA.norm(dist_tree_edit)
 
-    summary_df = pd.DataFrame(np.array([[mi_approx, mi_gurobi, mi_tree_edit], [norm_mi_approx, norm_mi_gurobi, norm_mi_tree_edit], [adjusted_mi_approx, adjusted_mi_gurobi, adjusted_mi_tree_edit], [corr_approx, corr_gurobi, corr_tree_edit], [frobenius_approx, frobenius_gurobi, frobenius_tree_edit]]), columns=['approx', 'gurobi', 'tree edit'], index=['mi', 'normalized mi', 'adjusted mi', 'correlation coeff', 'frobenius of dist'])
+    summary_df = pd.DataFrame(np.array([[mi_approx, mi_gurobi, mi_tree_edit], [norm_mi_approx, norm_mi_gurobi, norm_mi_tree_edit], [adjusted_mi_approx, adjusted_mi_gurobi, adjusted_mi_tree_edit], [corr_approx, corr_gurobi, corr_tree_edit], [frobenius_approx, frobenius_gurobi, frobenius_tree_edit]]), columns=['EPS_APPROX', 'EPS_EXACT', 'TED'], index=['mi', 'normalized mi', 'adjusted mi', 'correlation coeff', 'frobenius of dist'])
 
     summary_df.to_csv(out_path+ 'final_validation_results.csv')
     return summary_df
@@ -257,7 +270,7 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
 
     # 'EDGE-PRESERVATION-SIM-APPROX' for approximation or 'EDGE-PRESERVATION-SIM-EXACT' for exact measure, or 'TREE-EDIT-DIST' for tree edit distance
-    algorithms = ['EDGE-PRESERVATION-SIM-APPROX', 'EDGE-PRESERVATION-SIM-EXACT' ]
+    algorithms = ['EDGE-PRESERVATION-SIM-APPROX', 'EDGE-PRESERVATION-SIM-EXACT', 'TREE-EDIT-DIST']
 
     out_path = parsed_args.output_path + "/"
 
