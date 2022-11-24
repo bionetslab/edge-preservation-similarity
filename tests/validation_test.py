@@ -32,7 +32,7 @@ BASE_DIR = os.path.dirname(UTILS_DIR)
 sys.path.append(BASE_DIR)
 from edge_preservation_similarity.utils import *
 from edge_preservation_similarity.compute_eps import *
-from bracket_gml_parser import *
+from parsers import *
 
 def compute_similarities_for_validation(algorithm, input_path, output_path, jar_file_path= ''):
     '''MAIN FUNCTION FOR USE OF ALGORITHM FOR VALIDATION
