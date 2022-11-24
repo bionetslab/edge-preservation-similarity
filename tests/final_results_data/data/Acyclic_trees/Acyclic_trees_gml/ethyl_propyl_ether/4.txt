@@ -1,0 +1,47 @@
+graph [
+ directed 1 
+  node [
+    id 0
+    lbl "C"
+  ]
+  node [
+    id 1
+    lbl "C"
+  ]
+  node [
+    id 2
+    lbl "O"
+  ]
+  node [
+    id 3
+    lbl "C"
+  ]
+  node [
+    id 4
+    lbl "C"
+  ]
+  node [
+    id 5
+    lbl "C"
+  ]
+  edge [
+    source 0
+    target 1
+  ]
+  edge [
+    source 0
+    target 2
+  ]
+  edge [
+    source 1
+    target 3
+  ]
+  edge [
+    source 2
+    target 4
+  ]
+  edge [
+    source 4
+    target 5
+  ]
+]
