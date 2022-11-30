@@ -143,17 +143,13 @@ def compute_similarity_helper(algorithm, graph_coll, similarity_matrix, jar_file
 
                 if algorithm == 'TREE-EDIT-DIST':
                     similarity_matrix[j][i] = similarity
-
-                #if algorithm != 'EDGE-PRESERVATION-SIM-APPROX':
-                #    similarity_matrix[j][i] = similarity   
-                #    sim_list.extend(list(sim_values.flatten()))         
+       
 
             else:
                 #position below diagonal, similarity of both directions should be computed, the maximum of both similarity values is saved
-                #only necessary for approximation of edge-preservation-similarity as 'EDGE-PRESERVATION-SIM-EXACT' and 'TREE-EDIT-DIST' are exact measures
+                #not necessary for 'TREE-EDIT-DIST'
 
                 if algorithm != 'TREE-EDIT-DIST':
-                #if algorithm == 'EDGE-PRESERVATION-SIM-APPROX':
                     
                     sim_values = np.zeros((len(graph_coll[i]),len(graph_coll[j])))
                     for ii in range(len(graph_coll[i])):
