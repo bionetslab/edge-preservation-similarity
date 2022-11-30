@@ -31,7 +31,7 @@ pip install git
 ```
 2. Clone this repository
 ```
-Note: This doesn't work with anonymous GitHub. You can either usea workaround(https://github.com/ShoufaChen/clone-anonymous4open) or download the files manually. If you do so please make sure you keep the folder structure as is.
+git clone https://github.com/bionetslab/edge-preservation-similarity.git
 ```
 3. Install requirements
 ```
@@ -84,7 +84,7 @@ pip install git
 ```
 2. Clone this repository
 ```
-Note: This doesn't work with anonymous GitHub. You can either usea workaround(https://github.com/ShoufaChen/clone-anonymous4open) or download the files manually. If you do so please make sure you keep the folder structure as is.
+git clone https://github.com/bionetslab/edge-preservation-similarity.git
 ```
 3. Install requirements
 ```
@@ -118,7 +118,7 @@ pip install git
 ```
 2. Clone this repository
 ```
-Note: This doesn't work with anonymous GitHub. You can either usea workaround(https://github.com/ShoufaChen/clone-anonymous4open) or download the files manually. If you do so please make sure you keep the folder structure as is.
+git clone https://github.com/bionetslab/edge-preservation-similarity.git
 ```
 3. Install requirements
 ```
