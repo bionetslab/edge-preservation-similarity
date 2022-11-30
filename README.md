@@ -134,6 +134,7 @@ CLI for the validation tests of the edge-preservation-similarity
 
 required arguments:
         output_path         Path to folder where output should be saved
+        dataset             Choose dataset: {rna, acyclic or alkane}
 
 optional arguments:
         -h, --help          show this help message and exit
